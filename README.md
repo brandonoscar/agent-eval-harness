@@ -51,10 +51,10 @@ Exit code 1. Try `SUPPORT_BOT_BUG=refund_without_approval` (two safety failures)
 
 ## Install
 
-Not on PyPI. Install a release from GitHub:
+Not on PyPI. Install it from GitHub (add `@<commit>` to the URL to pin one):
 
 ```bash
-pip install "agent-eval-harness @ git+https://github.com/brandonoscar/agent-eval-harness@v0.1.0"
+pip install "agent-eval-harness @ git+https://github.com/brandonoscar/agent-eval-harness"
 ```
 
 For the OpenAI Agents SDK adapter, add the extra after the name: `agent-eval-harness[openai-agents] @ git+...`. A package named `agent-eval-harness` on PyPI is a different project, so `pip install agent-eval-harness` won't get you this one.

@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: "3.12"
       # Pinned to a release: this job holds your provider key.
-      - run: pip install -e . "agent-eval-harness @ git+https://github.com/brandonoscar/agent-eval-harness@v0.1.0"
+      - run: pip install -e . "agent-eval-harness @ git+https://github.com/brandonoscar/agent-eval-harness@f661bd2a49b162d38ab1c577b0bc925dca7efb98"
       - name: Run the suite three times
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
