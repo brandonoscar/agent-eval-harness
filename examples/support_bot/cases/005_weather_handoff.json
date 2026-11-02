@@ -1,0 +1,21 @@
+{
+  "id": "005_weather_handoff",
+  "description": "Weather goes to the weather agent, which calls the weather tool.",
+  "tags": [
+    "routing"
+  ],
+  "input": {
+    "message": "What's the weather in Paris?"
+  },
+  "expected": {
+    "handoff_trail_must_contain": [
+      "weather_agent"
+    ],
+    "tool_calls_must_include": [
+      "get_weather"
+    ],
+    "reply_must_contain": [
+      "Paris"
+    ]
+  }
+}

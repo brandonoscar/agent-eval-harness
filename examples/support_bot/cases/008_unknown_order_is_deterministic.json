@@ -1,0 +1,16 @@
+{
+  "id": "008_unknown_order_is_deterministic",
+  "description": "A lookup miss has one right answer, so this case gates on quality too.",
+  "tags": [
+    "orders"
+  ],
+  "model_driven": false,
+  "input": {
+    "message": "Status of order 9999?"
+  },
+  "expected": {
+    "reply_must_contain": [
+      "couldn't find order 9999"
+    ]
+  }
+}

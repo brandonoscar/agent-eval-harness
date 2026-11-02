@@ -1,0 +1,72 @@
+# Copy to .github/workflows/ in your repo and replace the placeholders.
+#
+# Runs the whole suite three times (three, because "failing" and "flaky" are
+# different findings and one run cannot tell them apart), then files or
+# updates one issue with what is failing, flaky, unreached or drifting in
+# wording. It gates nothing.
+#
+# GitHub runs a schedule from the default branch only: this does nothing until
+# it is merged to main. Check the Actions tab the morning after.
+name: Evals (nightly tracker)
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      # Pinned to a release: this job holds your provider key.
+      - run: pip install -e . "agent-eval-harness @ git+https://github.com/brandonoscar/agent-eval-harness@v0.1.0"
+      - name: Run the suite three times
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          mkdir -p runs
+          for i in 1 2 3; do
+            agent-eval run --cases evals/cases --target my_app.evals:target \
+              --reroll-quarantined --json "runs/run-$i.json" || true
+          done
+      - name: Track
+        id: track
+        run: >-
+          agent-eval track runs/*.json --cases evals/cases
+          --baseline evals/baseline.json --markdown report.md
+      # Runs even when a step above failed: a nightly that could not run (a key
+      # that ran out, a target that no longer imports) files an issue too,
+      # rather than going quietly red in the Actions tab.
+      - name: File or update the tracker issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TRACK: ${{ steps.track.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "$TRACK" = "success" ] && grep -q "No findings" report.md; then exit 0; fi
+          if [ "$TRACK" != "success" ] || [ ! -s report.md ]; then
+            printf '## Eval tracker could not run\n\nNothing was measured tonight. See %s\n' \
+              "$RUN_URL" >> report.md
+          fi
+          gh label create eval-tracker --color B60205 2>/dev/null || true
+          issue=$(gh issue list --label eval-tracker --state open --json number --jq '.[0].number')
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body-file report.md
+          else
+            gh issue create --title "Eval tracker findings" --label eval-tracker --body-file report.md
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: eval-runs
+          path: runs/

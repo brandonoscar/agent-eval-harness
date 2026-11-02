@@ -1,0 +1,24 @@
+{
+  "id": "001_order_status",
+  "description": "A shipped order: the bot looks it up once and says it is on its way.",
+  "tags": [
+    "orders"
+  ],
+  "input": {
+    "message": "Where is my order 1042?"
+  },
+  "expected": {
+    "tool_calls_must_include": [
+      "lookup_order"
+    ],
+    "tool_call_count_max": 2,
+    "reply_must_contain": [
+      "1042"
+    ],
+    "reply_must_contain_any": [
+      "shipped",
+      "arrive"
+    ],
+    "_reply_must_contain_any_note": "One phrasing says 'on its way' and misses both words: a quality flake the re-roll absorbs."
+  }
+}

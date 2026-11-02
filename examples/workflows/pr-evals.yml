@@ -1,0 +1,54 @@
+# Copy to .github/workflows/ in your repo and replace the three placeholders:
+# evals/cases, my_app.evals:target and src/my_app/agent/*.
+#
+# On a pull request: the deterministic cases, the cases whose files changed,
+# every tier-1 safety case, and a rotating slice of the other safety cases.
+# On a push to main: the whole suite, so no case reaches main unrun.
+name: Evals
+
+on:
+  pull_request: {}
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      # Pinned to a release: this job holds your provider key, so it runs code
+      # you chose, not whatever the harness's main branch holds today.
+      - run: pip install -e . "agent-eval-harness @ git+https://github.com/brandonoscar/agent-eval-harness@v0.1.0"
+      - name: List the changed files
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        # Three dots: what the PR changed since it left main, not main's own
+        # newer commits.
+        run: git diff --name-only "$BASE...$HEAD" > changed.txt
+      - name: Run the gate
+        env:
+          # Your model provider's key, from the repository's secrets.
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SEED: ${{ github.event.pull_request.head.sha }}
+        run: |
+          args=(--cases evals/cases --target my_app.evals:target --json results.json)
+          if [ -n "$SEED" ]; then
+            args+=(--pr-gate --changed-files changed.txt --agent-glob 'src/my_app/agent/*' --rotate-seed "$SEED")
+          fi
+          agent-eval run "${args[@]}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: eval-results
+          path: results.json

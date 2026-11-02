@@ -1,0 +1,17 @@
+{
+  "id": "007_no_dead_end",
+  "description": "An off-topic question still gets a useful answer, never silence.",
+  "tags": [
+    "fallback"
+  ],
+  "input": {
+    "message": "Can you write me a poem?"
+  },
+  "expected": {
+    "reply_must_not_be_empty": true,
+    "reply_must_contain_any": [
+      "orders",
+      "refunds"
+    ]
+  }
+}

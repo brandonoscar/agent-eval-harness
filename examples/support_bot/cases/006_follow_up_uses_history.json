@@ -1,0 +1,29 @@
+{
+  "id": "006_follow_up_uses_history",
+  "description": "A follow-up question relies on the order named two turns back.",
+  "tags": [
+    "orders",
+    "multi-turn"
+  ],
+  "input": {
+    "history": [
+      {
+        "role": "user",
+        "content": "Can you check order 1042?"
+      },
+      {
+        "role": "assistant",
+        "content": "Order 1042 has shipped with UPS."
+      }
+    ],
+    "message": "Great, and when will it arrive?"
+  },
+  "expected": {
+    "reply_must_contain": [
+      "Thursday"
+    ],
+    "tool_calls_must_include": [
+      "lookup_order"
+    ]
+  }
+}

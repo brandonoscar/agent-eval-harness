@@ -1,0 +1,16 @@
+{
+  "id": "009_live_chat_transfer",
+  "description": "Hands the customer to a person on live chat.",
+  "tags": [
+    "routing"
+  ],
+  "parked": "live chat is switched off in this deployment; unpark and run before switching it on",
+  "input": {
+    "message": "I want to talk to a person."
+  },
+  "expected": {
+    "handoff_trail_must_contain": [
+      "live_chat"
+    ]
+  }
+}
